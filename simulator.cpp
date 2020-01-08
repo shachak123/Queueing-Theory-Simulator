@@ -38,6 +38,7 @@ int main(int argc, char** argv) {
     for (int i = 0; i < probabilities_size; i++) {
         probabilities[i] = (stod(argv[i + 4]));
     }
+    
     int Y = 0, X = 0;
     double T_tag = -1, total_waiting_time = 0, total_service_time = 0;
     std::vector<double> Ti(probabilities_size), Zi(probabilities_size);
@@ -45,15 +46,17 @@ int main(int argc, char** argv) {
     std::deque<Customer> arrival_list;
     std::deque<double> service_list; // event list for both types of events
     int current_waiting = 0;
+    
     double time = (-log(generateRandomNumber()) / (lambda));
     arrival_list.emplace_back(Customer(time));
     Ti[0] += arrival_list.front().arrival_time;
-    // when to randomize arrival? at the very beginning and every time we take care of arrival
-    // when to randomize service? every time we take care of arrival and there is no service in
-    // the future or every time we take care of a service and there is another arrival except
-    // for the one the last service took care of.
+    
+    /* when to randomize arrival? at the very beginning and every time we take care of arrival
+       when to randomize service? every time we take care of arrival and there is no service in
+       the future or every time we take care of a service and there is another arrival except
+       for the one the last service took care of. */
     while (time < T) {
-        if (arrival_list[arrival_list.size() - 1].arrival_time == time) { // we are arrival
+        if (arrival_list[arrival_list.size() - 1].arrival_time == time) { // in case of arrival event
             if (probabilities[arrival_list.size() - 1] >= generateRandomNumber()) { // may actually enter
                 if (service_list.empty()) {
                     service_list.emplace_back(time + (-log(generateRandomNumber()) / mu));
@@ -61,7 +64,8 @@ int main(int argc, char** argv) {
                     arrival_list[0].service_start = time;
                 }
                 arrival_list.emplace_back(Customer(time + (-log(generateRandomNumber()) / (lambda))));
-            } else { // should not enter, erase last from list
+            } 
+            else { // should not enter, erase last from list
                 if (service_list.empty()) {
                     service_list.emplace_back(time + (-log(generateRandomNumber()) / mu));
                     T_tag = service_list.front();
@@ -75,11 +79,11 @@ int main(int argc, char** argv) {
             current_waiting = arrival_list.size() - 1;
             Ti[current_waiting] += min(service_list.front(), arrival_list[arrival_list.size() - 1].arrival_time) - time;
         }
-        else { // we are service
-            service_list.pop_front(); // remove first
+        else { // in case of service event
+            service_list.pop_front(); // remove first element in queue
             total_waiting_time += arrival_list.front().service_start - arrival_list.front().arrival_time;
             total_service_time += time - arrival_list.front().service_start;
-            arrival_list.pop_front(); // remove first
+            arrival_list.pop_front(); // remove first element in queue
             Y++;
             current_waiting = max(arrival_list.size() - 1, 0);
             if (arrival_list.size() > 1) {
@@ -95,9 +99,11 @@ int main(int argc, char** argv) {
                 continue;
             }
         }
+        
         time = min(service_list.front(), arrival_list[arrival_list.size() - 1].arrival_time);
     }
-    // time over, take care of final students - if student arrival is greater than T, dismiss
+    
+    // time over, take care of elements students - if element arrival is greater than T, dismiss
     if (!arrival_list.empty()) {
         if (arrival_list[arrival_list.size() - 1].arrival_time >= T) {
             if (arrival_list.size() == 1) {
@@ -108,12 +114,15 @@ int main(int argc, char** argv) {
                 for (int k = 0; k < probabilities_size; ++k) {
                     cout << Ti[k] / T_tag << " ";
                 }
+                
                 Tw_roof = total_waiting_time / Y;
                 Ts_roof = total_service_time / Y;
                 lambdaA_roof = Y / T;
+                
                 cout << Tw_roof << " ";
                 cout << Ts_roof << " ";
                 cout << lambdaA_roof << " ";
+                
                 return 0;
             }
             else
@@ -126,6 +135,7 @@ int main(int argc, char** argv) {
             arrival_list[0].service_start = service_list.front();
         }
         Ti[current_waiting] += service_list.front() - time;
+        
         time = service_list.front();
         while (!arrival_list.empty()) {
             service_list.pop_front();
@@ -141,6 +151,7 @@ int main(int argc, char** argv) {
             T_tag = service_list.front();
             arrival_list[0].service_start = service_list.front();
             Ti[current_waiting] += service_list.front() - time;
+            
             time = service_list.front();
         }
     }
@@ -151,9 +162,11 @@ int main(int argc, char** argv) {
     for (int k = 0; k < probabilities_size; ++k) {
         cout << Ti[k] / T_tag << " ";
     }
+    
     Tw_roof = total_waiting_time / Y;
     Ts_roof = total_service_time / Y;
     lambdaA_roof = Y / T;
+    
     cout << Tw_roof << " ";
     cout << Ts_roof << " ";
     cout << lambdaA_roof << " ";
